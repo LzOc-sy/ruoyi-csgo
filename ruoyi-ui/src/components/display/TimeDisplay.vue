@@ -7,13 +7,25 @@
       <span v-if="use12Hour" class="ampm">{{ ampm }}</span>
         </i>
     </div>
-    <div v-if="showDate" class="date-display">{{ formattedDate }}</div>
+    <div
+      v-if="showDate"
+      class="date-display"
+      @click="openDatePicker"
+    >
+      {{ formattedDate }}
+    </div>
     <div v-if="showDay" class="day-display">{{ formattedDay }}</div>
-    <div class="block-time">
+    <div v-if="showDate" class="block-time">
       <el-date-picker
+        ref="todoDatePicker"
         v-model="todoTime"
         type="date"
-        placeholder="选择日期">
+        format="yyyy-MM-dd"
+        value-format="yyyy-MM-dd"
+        placeholder="选择日期"
+        :editable="false"
+        :clearable="false"
+      >
       </el-date-picker>
     </div>
   </div>
@@ -52,15 +64,12 @@ export default {
     color: {
       type: String,
       default: '#409EFF'
-    },
-    todoTime:{
-      type: String,
-      default: () => ({})
     }
   },
   data() {
     return {
-      now: new Date()
+      now: new Date(),
+      todoTime: ''
     }
   },
   computed: {
@@ -81,15 +90,42 @@ export default {
       return this.now.getHours() >= 12 ? 'PM' : 'AM';
     },
     formattedDate() {
-      const year = this.now.getFullYear();
-      const month = this.now.getMonth() + 1;
-      const day = this.now.getDate();
+      const selectedDate = this.todoTime ? this.createDateFromString(this.todoTime) : null;
+      const targetDate = selectedDate || this.now;
+      if (!targetDate) {
+        return '';
+      }
+      const year = targetDate.getFullYear();
+      const month = targetDate.getMonth() + 1;
+      const day = targetDate.getDate();
       return `${year}年${month}月${day}日`;
     },
     formattedDay() {
+      const selectedDate = this.todoTime ? this.createDateFromString(this.todoTime) : null;
+      const targetDate = selectedDate || this.now;
+      if (!targetDate) {
+        return '';
+      }
       const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-      return weekdays[this.now.getDay()];
+      return weekdays[targetDate.getDay()];
     }
+  },
+  watch: {
+    todoTime(newDate) {
+      if (!newDate) {
+        this.$emit('date-change', '');
+        return;
+      }
+      const formatted = this.formatDate(newDate);
+      if (formatted !== newDate) {
+        this.todoTime = formatted;
+        return;
+      }
+      this.$emit('date-change', formatted);
+    }
+  },
+  created() {
+    this.todoTime = this.formatDate(new Date());
   },
   mounted() {
     this.timer = setInterval(() => {
@@ -99,6 +135,51 @@ export default {
   beforeDestroy() {
     if (this.timer) {
       clearInterval(this.timer);
+    }
+  },
+  methods: {
+    formatDate(date) {
+      if (!date) {
+        return '';
+      }
+      if (typeof date === 'string') {
+        const normalized = date.trim().replace(/\//g, '-');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+          return normalized;
+        }
+        const parsedDate = this.createDateFromString(normalized);
+        return parsedDate ? this.formatDate(parsedDate) : '';
+      }
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
+    createDateFromString(dateStr) {
+      if (!dateStr || typeof dateStr !== 'string') {
+        return null;
+      }
+      const parts = dateStr.split('-').map(part => parseInt(part, 10));
+      if (parts.length !== 3 || parts.some(Number.isNaN)) {
+        return null;
+      }
+      const [year, month, day] = parts;
+      return new Date(year, month - 1, day);
+    },
+    openDatePicker() {
+      const datePicker = this.$refs.todoDatePicker;
+      if (!datePicker) {
+        return;
+      }
+      if (typeof datePicker.showPicker === 'function') {
+        datePicker.showPicker();
+        return;
+      }
+      if (typeof datePicker.focus === 'function') {
+        datePicker.focus();
+        return;
+      }
+      datePicker.pickerVisible = true;
     }
   }
 }
@@ -155,6 +236,7 @@ export default {
   font-size: 1.1em;
   color: #606266;
   margin-bottom: 5px;
+  cursor: pointer;
 }
 
 .day-display {

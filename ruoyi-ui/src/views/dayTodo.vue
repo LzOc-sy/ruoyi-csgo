@@ -23,6 +23,7 @@
             size="medium"
             layout="standard"
             color="#409EFF"
+            @date-change="handleDateChange"
           /></i>
         </div>
       </el-main>
@@ -39,9 +40,16 @@ export default {
   },
   data() {
     return {
-      version: "3.6.3"
+      version: "3.6.3",
+      selectedDate: ''
     }
   },
+  methods: {
+    handleDateChange(selectedDate) {
+      this.selectedDate = selectedDate;
+      console.log('选中的日期:', selectedDate);
+    }
+  }
 };
 </script>
 
