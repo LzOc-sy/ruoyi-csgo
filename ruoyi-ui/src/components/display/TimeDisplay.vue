@@ -1,20 +1,30 @@
 <template>
-  <div class="time-display" :class="[size, layout]">
-    <div class="time-main">
-      <i class="el-icon-date" >
-      <span class="hours">{{ formattedHours }}</span>:<span class="minutes">{{ formattedMinutes }}</span>
-      <span v-if="showSeconds" class="seconds">:{{ formattedSeconds }}</span>
-      <span v-if="use12Hour" class="ampm">{{ ampm }}</span>
+  <div class="time-display-wrapper">
+    <el-checkbox
+      v-model="isChecked"
+      @change="handleCheckboxChange"
+      class="time-display-checkbox"
+    >
+      {{ checkboxLabel || '选项' }}
+    </el-checkbox>
+    <div class="time-display" :class="[size, layout]">
+      <div class="time-main">
+        <i class="el-icon-date">
+          <span class="hours">{{ formattedHours }}</span>:<span class="minutes">{{ formattedMinutes }}</span>
+          <span v-if="showSeconds" class="seconds">:{{ formattedSeconds }}</span>
+          <span v-if="use12Hour" class="ampm">{{ ampm }}</span>
         </i>
-    </div>
-    <div v-if="showDate" class="date-display">{{ formattedDate }}</div>
-    <div v-if="showDay" class="day-display">{{ formattedDay }}</div>
-    <div class="block-time">
-      <el-date-picker
-        v-model="todoTime"
-        type="date"
-        placeholder="选择日期">
-      </el-date-picker>
+      </div>
+      <div v-if="showDate" class="date-display">{{ formattedDate }}</div>
+      <div v-if="showDay" class="day-display">{{ formattedDay }}</div>
+      <div class="block-time">
+        <el-date-picker
+          v-model="todoTime"
+          type="date"
+          placeholder="选择日期"
+        >
+        </el-date-picker>
+      </div>
     </div>
   </div>
 </template>
@@ -53,14 +63,23 @@ export default {
       type: String,
       default: '#409EFF'
     },
-    todoTime:{
+    todoTime: {
       type: String,
       default: () => ({})
+    },
+    checkboxLabel: {
+      type: String,
+      default: '启用'
+    },
+    defaultChecked: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
-      now: new Date()
+      now: new Date(),
+      isChecked: false
     }
   },
   computed: {
@@ -91,7 +110,18 @@ export default {
       return weekdays[this.now.getDay()];
     }
   },
+  watch: {
+    defaultChecked(newVal) {
+      this.isChecked = newVal;
+    }
+  },
+  methods: {
+    handleCheckboxChange(value) {
+      this.$emit('checkbox-change', value);
+    }
+  },
   mounted() {
+    this.isChecked = this.defaultChecked;
     this.timer = setInterval(() => {
       this.now = new Date();
     }, 1000);
@@ -105,6 +135,16 @@ export default {
 </script>
 
 <style scoped>
+.time-display-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.time-display-checkbox {
+  margin-right: 0;
+}
+
 .time-display {
   display: flex;
 

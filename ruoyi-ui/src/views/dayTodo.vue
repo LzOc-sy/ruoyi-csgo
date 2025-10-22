@@ -23,7 +23,10 @@
             size="medium"
             layout="standard"
             color="#409EFF"
-          /></i>
+            checkbox-label="启用任务"
+            :default-checked="isTaskEnabled"
+            @checkbox-change="handleCheckboxChange"
+          />
         </div>
       </el-main>
     </el-container>
@@ -39,9 +42,16 @@ export default {
   },
   data() {
     return {
-      version: "3.6.3"
+      version: "3.6.3",
+      isTaskEnabled: false
     }
   },
+  methods: {
+    handleCheckboxChange(checked) {
+      console.log("多选框状态:", checked)
+      this.isTaskEnabled = checked
+    }
+  }
 };
 </script>
 
