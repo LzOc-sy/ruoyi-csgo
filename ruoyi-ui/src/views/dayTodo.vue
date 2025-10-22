@@ -4,7 +4,8 @@
       <el-header class="minimalist-header">
         <div class="header-content">
           <i class="el-icon-bell">
-          <span class="title">失败乃成功之母</span></i>
+            <span class="title">失败乃成功之母</span>
+          </i>
           <div class="bottom-left">
             <el-button type="primary" class="white-btn" icon="el-icon-notebook-2" color="#ffffff">列表视图</el-button>
             <el-button type="primary" class="white-btn" icon="el-icon-date">日历视图</el-button>
@@ -13,8 +14,7 @@
         </div>
       </el-header>
       <el-main>
-        <div >
-
+        <div>
           <TimeDisplay
             :show-seconds="true"
             :show-date="true"
@@ -23,7 +23,9 @@
             size="medium"
             layout="standard"
             color="#409EFF"
-          /></i>
+            checkbox-label="启用任务"
+            @data-change="handleDataChange"
+          />
         </div>
       </el-main>
     </el-container>
@@ -32,17 +34,29 @@
 
 <script>
 import TimeDisplay from '@/components/display/TimeDisplay.vue'
+
 export default {
-  name: "DayTodo",
+  name: 'DayTodo',
   components: {
     TimeDisplay
   },
   data() {
     return {
-      version: "3.6.3"
+      version: '3.6.3',
+      selectedData: {
+        isChecked: false,
+        date: ''
+      }
     }
   },
-};
+  methods: {
+    handleDataChange(data) {
+      console.log('多选框状态:', data.isChecked)
+      console.log('选中的日期:', data.date)
+      this.selectedData = data
+    }
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -65,7 +79,7 @@ export default {
     align-items: center;
   }
 
-  .white-btn{
+  .white-btn {
     background-color: #ffffff;
     border-color: #dcdfe6;
     color: #606266;
@@ -74,7 +88,6 @@ export default {
     &:focus {
       background-color: #f5f7fa;
       border-color: #c6e2ff;
-
     }
 
     &:active {

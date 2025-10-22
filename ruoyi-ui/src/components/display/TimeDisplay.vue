@@ -1,19 +1,30 @@
 <template>
   <div class="time-display" :class="[size, layout]">
     <div class="time-main">
-      <i class="el-icon-date" >
-      <span class="hours">{{ formattedHours }}</span>:<span class="minutes">{{ formattedMinutes }}</span>
-      <span v-if="showSeconds" class="seconds">:{{ formattedSeconds }}</span>
-      <span v-if="use12Hour" class="ampm">{{ ampm }}</span>
-        </i>
+      <i class="el-icon-date">
+        <span class="hours">{{ formattedHours }}</span>:<span class="minutes">{{ formattedMinutes }}</span>
+        <span v-if="showSeconds" class="seconds">:{{ formattedSeconds }}</span>
+        <span v-if="use12Hour" class="ampm">{{ ampm }}</span>
+      </i>
     </div>
     <div v-if="showDate" class="date-display">{{ formattedDate }}</div>
     <div v-if="showDay" class="day-display">{{ formattedDay }}</div>
-    <div class="block-time">
+    <div class="control-panel">
+      <el-checkbox
+        v-model="isChecked"
+        @change="handleCheckboxChange"
+      >
+        {{ checkboxLabel }}
+      </el-checkbox>
       <el-date-picker
         v-model="todoTime"
         type="date"
-        placeholder="选择日期">
+        placeholder="选择日期"
+        format="yyyy-MM-dd"
+        value-format="yyyy-MM-dd"
+        clearable
+        @change="handleDateChange"
+      >
       </el-date-picker>
     </div>
   </div>
@@ -53,14 +64,24 @@ export default {
       type: String,
       default: '#409EFF'
     },
-    todoTime:{
+    checkboxLabel: {
       type: String,
-      default: () => ({})
+      default: '启用'
+    },
+    defaultChecked: {
+      type: Boolean,
+      default: false
+    },
+    defaultDate: {
+      type: [String, Date],
+      default: ''
     }
   },
   data() {
     return {
-      now: new Date()
+      now: new Date(),
+      isChecked: this.defaultChecked,
+      todoTime: this.formatDate(this.defaultDate)
     }
   },
   computed: {
@@ -91,14 +112,66 @@ export default {
       return weekdays[this.now.getDay()];
     }
   },
+  watch: {
+    defaultChecked(newVal) {
+      this.isChecked = newVal;
+      this.emitAllData();
+    },
+    defaultDate(newVal) {
+      this.todoTime = this.formatDate(newVal);
+      this.emitAllData();
+    }
+  },
   mounted() {
     this.timer = setInterval(() => {
       this.now = new Date();
     }, 1000);
+    this.emitAllData();
   },
   beforeDestroy() {
     if (this.timer) {
       clearInterval(this.timer);
+    }
+  },
+  methods: {
+    handleCheckboxChange(value) {
+      this.$emit('checkbox-change', value);
+      this.emitAllData();
+    },
+    handleDateChange(value) {
+      const formattedDate = this.formatDate(value);
+      this.$emit('date-change', formattedDate);
+      this.emitAllData();
+    },
+    emitAllData() {
+      const formattedDate = this.formatDate(this.todoTime);
+      this.$emit('data-change', {
+        isChecked: this.isChecked,
+        date: formattedDate
+      });
+    },
+    formatDate(date) {
+      if (!date) return '';
+      if (typeof date === 'string') {
+        const parts = date.split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts;
+          return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+        const timestamp = Date.parse(date);
+        if (!Number.isNaN(timestamp)) {
+          return this.formatDate(new Date(timestamp));
+        }
+        return '';
+      }
+      const d = new Date(date);
+      if (Number.isNaN(d.getTime())) {
+        return '';
+      }
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
   }
 }
@@ -116,12 +189,12 @@ export default {
   min-width: 280px;
 }
 
-.block-time{
+.control-panel {
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
-  text-align: right;
-  margin-left: auto; /* 这会让组件靠右 */
+  align-items: center;
+  margin-left: auto;
+  gap: 12px;
 }
 
 .time-display:hover {
