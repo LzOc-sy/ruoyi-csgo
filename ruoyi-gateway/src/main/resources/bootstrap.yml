@@ -1,0 +1,77 @@
+# Tomcat
+server:
+  port: 8080
+
+# Spring
+spring:
+  application:
+    # 应用名称
+    name: ruoyi-gateway
+  profiles:
+    # 环境配置
+    active: dev
+  cloud:
+    nacos:
+      discovery:
+        # 服务注册地址
+        server-addr: 39.104.59.118:8848
+        username: nacos
+        password: nacos
+        # 关键配置：关闭快速失败，允许重试
+        fail-fast: false
+        # 重试次数和间隔
+        max-retry: 10
+        retry-interval: 3000
+        # 心跳配置
+        heart-beat-interval: 5000
+        heart-beat-timeout: 15000
+        ip-delete-timeout: 30000
+        # 命名空间和组
+        namespace: public
+        group: DEFAULT_GROUP
+      config:
+        # 配置中心地址
+        server-addr: 39.104.59.118:8848
+        username: nacos
+        password: nacos
+        # 配置文件格式
+        file-extension: yml
+        # 重试配置
+        max-retry: 8
+        retry-interval: 2000
+        timeout: 10000
+        # 共享配置
+        shared-configs:
+          - application-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}
+        # 命名空间和组
+        namespace: public
+        group: DEFAULT_GROUP
+        refresh-enabled: true
+    sentinel:
+      # 取消控制台懒加载
+      eager: true
+      transport:
+        # 控制台地址
+        dashboard: 127.0.0.1:8718
+      # nacos配置持久化
+      datasource:
+        ds1:
+          nacos:
+            server-addr: 39.104.59.118:8848
+            dataId: sentinel-ruoyi-gateway
+            groupId: DEFAULT_GROUP
+            data-type: json
+            rule-type: gw-flow
+
+# 日志配置
+logging:
+  level:
+    com:
+      alibaba:
+        nacos:
+          client:
+            naming: error
+    org:
+      springframework:
+        cloud:
+          client: info
